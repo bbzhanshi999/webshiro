@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webshiro.dao.UserMapper">
+
+    <resultMap id="userMap" type="com.webshiro.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="userName"/>
+        <result column="password" property="password"/>
+        <result column="salt" property="salt"/>
+        <collection property="permissions" ofType="com.webshiro.entity.Permission">
+            <id column="permission_id" property="id"/>
+            <result column="permission" property="permission"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="userRoleMap" type="com.webshiro.entity.User">
+        <id column="id" property="id"/>
+        <result column="username" property="userName"/>
+        <result column="password" property="password"/>
+        <result column="salt" property="salt"/>
+        <collection property="roles" ofType="com.webshiro.entity.Role">
+            <id column="role_id" property="id"/>
+            <result column="rolename" property="roleName"/>
+        </collection>
+    </resultMap>
+
+
+    <insert id="insert">
+        INSERT INTO sys_users (id,username,password,salt) VALUES (#{id},#{userName},#{password},#{salt})
+    </insert>
+
+
+    <select id="findUserByUsername" resultType="com.webshiro.entity.User" parameterType="java.lang.String">
+        SELECT * from sys_users where username=#{userName}
+    </select>
+
+
+    <select id="findRolesByUserName" resultMap="userRoleMap" parameterType="java.lang.String">
+        select
+          users.id as id,
+          users.username as userName,
+          users.password as password,
+          users.salt as salt,
+          roles.id as role_id,
+          roles.rolename as roleName
+        FROM
+          sys_users as users
+          left join sys_users_roles u_r on users.id=u_r.user_id
+          left join sys_roles roles on u_r.role_id =roles.id
+        WHERE
+          users.username =#{userName}
+    </select>
+
+
+    <select id="findPermissionsByUserName" resultMap="userMap" parameterType="java.lang.String">
+        select
+          users.id as id,
+          users.username as userName,
+          users.password as password,
+          users.salt as salt,
+          permissions.id as permission_id,
+          permissions.permission as permission
+        FROM
+          sys_users as users
+          left join sys_users_roles u_r on users.id=u_r.user_id
+          left join sys_roles_permissions r_p on u_r.role_id = r_p.role_id
+          left join sys_permissions permissions on r_p.permission_id= permissions.id
+        where
+          users.username =#{userName}
+    </select>
+
+
+</mapper>
